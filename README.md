@@ -17,10 +17,12 @@ smac_tg/
   docs/
     interface.md
   examples/
+    train_qmix_smac.py
     train_with_trustgraph_stub.py
   smac_tg/
     __init__.py
     config.py
+    qmix.py
     models.py
     state_encoder.py
     trustgraph_client.py
@@ -66,6 +68,34 @@ tactical_command = tg_adapter.maybe_update_tactic(
 ```
 
 `obs_summary` 是你从 SMAC observation 中整理出的结构化状态。格式见 [docs/interface.md](docs/interface.md)。
+
+## 独立 QMIX 训练
+
+当前仓库提供了一个不接入 TrustGraph 的 QMIX 训练入口，用于先完成 SMAC 底层 MARL 训练闭环：
+
+```bash
+python3 examples/train_qmix_smac.py --map-name 3m --total-timesteps 200000
+```
+
+可选参数示例：
+
+```bash
+python3 examples/train_qmix_smac.py \
+  --map-name 8m \
+  --total-timesteps 1000000 \
+  --batch-size 32 \
+  --device auto \
+  --checkpoint-dir runs/qmix
+```
+
+训练实现位于 `smac_tg/qmix.py`，包含：
+
+- RNN agent 网络，输入为局部 observation、上一动作 one-hot 和 agent id。
+- QMIX monotonic mixing network，基于全局 state 生成超网络权重。
+- episode replay buffer、double Q target、epsilon-greedy exploration。
+- 定期 evaluation、日志输出和 checkpoint 保存。
+
+运行前需要单独安装并配置 OxWhirl SMAC 和 StarCraft II 环境。不要用 PyPI 上同名 `smac` 自动配置库替代 OxWhirl 的 `smac.env.StarCraft2Env`。
 
 ## 重要约束
 

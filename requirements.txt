@@ -1,1 +1,3 @@
 trustgraph-cli
+numpy
+torch
